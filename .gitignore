@@ -54,4 +54,8 @@ dkms.conf
 # added by Seiichi Nukayama
 cards
 *.c~
+Head First C Map.html
+Head First C Map_files
+geo2json
+
 
