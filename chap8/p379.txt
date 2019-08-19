@@ -1,0 +1,12 @@
+
+
+1) compile
+
+gcc -fPIC -c hfcal_UK.c -o hfcal.o
+
+gcc -shared hfcal.o /usr/local/lib/libhfcal.so
+
+
+2) exec
+
+/opt/apps/treadmill

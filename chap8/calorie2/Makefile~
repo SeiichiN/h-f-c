@@ -1,0 +1,11 @@
+# Makefile
+# p367
+
+hfcal.o: hfcal.c
+	gcc -c hfcal.c -I . -o hfcal.o
+elliptical.o: elliptical.c
+	gcc -c elliptical.c -I . -o elliptical.o
+hfcal.a: hfcal.o
+	ar -rcs hfcal.a -L ./libs -o hfcal.o
+elliptical: elliptical.o hfcal.a
+	gcc hfcal.o elliptical.o -I . -L ./libs -o elliptical
