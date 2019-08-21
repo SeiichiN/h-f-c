@@ -69,4 +69,6 @@ tax
 totaller
 *.h~
 turtle
+*.py~
+newshound
 
