@@ -31,7 +31,9 @@ import sys
 import string
 import unicodedata
 import getopt
+import xml.dom.minidom
 from xml.dom import minidom
+from xml.dom.minidom import parse, parseString
 
 def usage():
     print("Usage:\npython rssgossip.py [-uh] <search-regexp>")
@@ -58,12 +60,21 @@ print(args[0])
 
 searcher = re.compile(args[0], re.IGNORECASE)
 for url in str.split(os.environ['RSS_FEED']):
-    feed = urllib.request.urlopen(url)
+    urldata = urllib.request.urlopen(url).read()
+    feed = urldata.decode('utf-8').encode('utf-8')
+    print("feed:")
+    print(feed)
     try:
-        dom = minidom.parse(feed)
+        dom = minidom.parseString(feed)
+        print("dom:")
+        # print(dom.toprettyxml("\t", "\n", 'utf-8'))
+        print(dom)
         forecasts = []
         for node in dom.getElementsByTagName('title'):
-            txt = node.firstChild.wholeText
+            print("node")
+            print(node)
+            # txt = node.firstChild.wholeText
+            txt = node.firstChild.data
             print(txt)
             if searcher.search(txt):
                 print("Hit!")
