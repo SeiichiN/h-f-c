@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
     int times = 3;
     char *phrase = argv[1];
     int i;
+    const char *PYTHON = "/usr/bin/python";
+    const char *SCRIPT = "rssgossip.py";
 
     printf("phrase: %s\n", phrase);
 
@@ -24,8 +26,7 @@ int main(int argc, char *argv[])
         sprintf(var, "RSS_FEED=%s", feeds[i]);
         printf("%s\n", var);
         char *vars[] = {var, NULL};
-        if ( execle ("/home/se-ichi/.pyenv/shims/python", "/home/se-ichi/.pyenv/shims/python",
-                     "./rssgossip3.py", phrase, NULL, vars ) == -1) {
+        if ( execle (PYTHON, PYTHON, SCRIPT, phrase, NULL, vars ) == -1) {
             fprintf(stderr, "スクリプトを実行できません：%s\n", strerror(errno));
             return 1;
         }

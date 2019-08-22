@@ -51,11 +51,18 @@ print(args[0])
 searcher = re.compile(args[0], re.IGNORECASE)
 for url in string.split(os.environ['RSS_FEED']):
     feed = urllib.urlopen(url)
+    print("feed:")
+    print(feed)
     try:
         dom = minidom.parse(feed)
+        print("dom:")
+        print(dom)
         forecasts = []
         for node in dom.getElementsByTagName('title'):
+            print("node:")
+            print(node)
             txt = node.firstChild.wholeText
+            print("txt:")
             print(txt)
             if searcher.search(txt):
                 print("Hit!")

@@ -60,13 +60,13 @@ print(args[0])
 
 searcher = re.compile(args[0], re.IGNORECASE)
 for url in str.split(os.environ['RSS_FEED']):
-    urldata = urllib.request.urlopen(url).read()
-    feed = urldata.decode('utf-8').encode('utf-8')
+    urldata = urllib.request.urlopen(url)
+    feed = urldata.read().decode('utf-8').encode('utf-8')
     print("feed:")
     print(feed)
     try:
         dom = minidom.parseString(feed)
-        print("dom:")
+        print("domdom:")
         # print(dom.toprettyxml("\t", "\n", 'utf-8'))
         print(dom)
         forecasts = []
