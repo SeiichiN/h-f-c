@@ -1,5 +1,107 @@
+『Head First C』コードマグネット p422 の解答
+
+この解答を考える際、日本語のRSSフィードにも対応できるようにした。
+
+Python は、内部文字列に unicord文字列をつかっており、外部に渡すときは、バイト文字列に変換しなくてはならない。
+
+searcher = re.compile(args[0].decode('utf-8'), re.IGNORECASE)
+
+ここでは、args[0]を unicord文字列 に変換（decode）して、正規表現オブジェクトにしている。
+
+さらに、この文字列を外部に渡すときは、バイト文字列に変換しなくてはならない。
+
+txt = unicodedata.normalize('NFKC', txt).encode('utf-8', 'ignore')
+print(txt)
+
+使い方
+
+$ make
+
+$ ./newshound '香港|hong kong|韓国|korea'
+
+あるいは、Python2 で直に動作させたい場合は、
+
+$ export RSS_FEED=https://news.yahoo.co.jp/pickup/rss.xml
+$ /usr/bin/python rssgossip.py [-u|p|h] '香港|hong kong|韓国|korea'
+
+
+
+
+newshound.c
+
+/*
+ * newshound.c
+ *
+ * 参考
+ * https://www.mkamimura.com/2014/09/c-unistdfork-idpid.html
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+
+int main(int argc, char *argv[])
+{
+
+	char *feeds[] = {
+        "https://news.yahoo.co.jp/pickup/rss.xml",
+        "https://rss.msn.com/",
+        "https://news.google.com/rss?ie=UTF-8&oe=UTF-8&topic=h&hl=en-US&gl=US&ceid=US:en"
+    };
+                   
+    int times = 3;
+    char *phrase = argv[1];
+    int i;
+    const char *PYTHON = "/usr/bin/python";
+    const char *SCRIPT = "rssgossip.py";
+
+    for (i = 0; i < times; i++) {
+        char var[255];
+        sprintf(var , "RSS_FEED=%s", feeds[i]);
+        char *vars[] = {var, NULL};
+        pid_t pid = fork();
+        if (pid == -1) {
+            fprintf(stderr, "プロセスをフォークできません:%s\n", strerror(errno));
+            return (1);
+        }
+        if (!pid) {
+            if (execle(PYTHON, PYTHON, SCRIPT, phrase, NULL, vars) == -1) {
+                fprintf(stderr, "スクリプトを実行できません:%s\n", strerror(errno));
+                return (1);
+            }
+        }
+    }
+
+    return (0);
+}
+
+Makefile
+
+CC=cc
+CFLAGS=-g -Wall
+SRC=newshound.c
+OBJ=newshound.o
+
+all: newshound
+
+newshound: $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o newshound
+
+newshound.o: newshound.c
+	$(CC) $(CFLAGS) -c newshound.c -o newshound.o
+
+clear:
+	rm -rf newshound $(OBJ)
+ 
+
+
+rssgossip.py
+
 # Copyright (C) 2019 by Seiichi Nukayama
 #
+# This code works under Python2.
+# 
 # ---------- original copyright --------------------------------------------
 # Copyright (C) 2011 by D+D Griffiths
 # 

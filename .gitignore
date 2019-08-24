@@ -72,4 +72,6 @@ turtle
 *.py~
 newshound
 mynewshound
+temp
+*.txt~
 

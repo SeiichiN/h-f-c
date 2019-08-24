@@ -1,3 +1,25 @@
+rssgossip.py -- with Python2
+============================
+
+日本語を扱うのにとまどった。
+
+結論からいうと、Pythonでは、外部から文字列を取り込んだときま、内部では ''unicord文字列'' で処理しなければならない。
+
+searcher = re.compile(args[0].decode('utf-8'), re.IGNORECASE)
+
+ここでは、args[0]を unicord文字列 に変換（decode）して、正規表現オブジェクトにしている。
+
+さらに、この文字列を外部に渡すときは、バイト文字列に変換しなくてはならない。
+
+txt = unicodedata.normalize('NFKC', txt).encode('utf-8', 'ignore')
+print(txt)
+
+
+
+
+
+原作者の注
+-------------------------------------------------------------------------------------------------
 RSS GOSSIP
 ==========
 
@@ -19,3 +41,4 @@ The search string can be a regular expression. So:
  ./rssgossip.py 'lohan|britney|kardashian'
 
 will find stories containing any of the three names.
+-------------------------------------------------------------------------------------------------
