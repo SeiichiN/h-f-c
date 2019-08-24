@@ -12,29 +12,16 @@ int main(int argc, char *argv[])
 {
 
 	char *feeds[] = {
-        "http://www.billies-works.com/feed/",
-        "http://rss.cnn.com/rss/edition_world.rss",
-        "http://rss.cnn.com/rss/edition_americas.rss"
+        "https://news.yahoo.co.jp/pickup/rss.xml",
+        "https://rss.msn.com/",
+        "https://news.google.com/rss?ie=UTF-8&oe=UTF-8&topic=h&hl=en-US&gl=US&ceid=US:en"
     };
-
-/*
-    char *feeds[] = {
-        "http://rss.cnn.com/rss/edition.rss",
-        "http://rss.cnn.com/rss/edition_world.rss",
-        "http://rss.cnn.com/rss/edition_africa.rss",
-        "http://rss.cnn.com/rss/edition_americas.rss",
-        "http://rss.cnn.com/rss/edition_asia.rss",
-        "http://rss.cnn.com/rss/edition_europe.rss",
-        "http://rss.cnn.com/rss/edition_meast.rss",
-        "http://rss.cnn.com/rss/edition_us.rss"
-    };
-*/
                    
-    int times = 1;
+    int times = 3;
     char *phrase = argv[1];
     int i;
-    const char *PYTHON = "/usr/bin/python3";
-    const char *SCRIPT = "rssgossip3.py";
+    const char *PYTHON = "/usr/bin/python";
+    const char *SCRIPT = "rssgossip.py";
 
     for (i = 0; i < times; i++) {
         char var[255];

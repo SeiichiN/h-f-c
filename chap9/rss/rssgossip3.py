@@ -61,24 +61,27 @@ print(args[0])
 searcher = re.compile(args[0], re.IGNORECASE)
 for url in str.split(os.environ['RSS_FEED']):
     urldata = urllib.request.urlopen(url)
-    feed = urldata.read()  #  .decode('utf-8').encode('utf-8')
-    # print("feed:")
-    # print(feed)
+    feed = urldata.read().decode('utf-8')  # .encode('utf-8')
+    print("feed:")
+    print(feed.encode('utf-8'))
     try:
-        dom = minidom.parseString(feed)
-        print("domdom:")
+        print("in try")
+        dom = parseString(feed)
+        print(dom.toxml())
+        prdom = dom.toxml()  # .encode('utf-8')
         # print(dom.toprettyxml("\t", "\n", 'utf-8'))
-        print(dom)
+        print("dom: %s" % prdom)
         forecasts = []
         for node in dom.getElementsByTagName('title'):
-            print("node")
-            print(node)
+            prnode = node.encode('utf-8')
+            print("node: %s" % prnode)
             # txt = node.firstChild.wholeText
             txt = node.firstChild.data
-            print(txt)
+            prtxt = txt.encode('utf-8')
+            print("txt: %s" % prtxt)
             if searcher.search(txt):
                 print("Hit!")
-                txt = unicodedata.normalize('NFKC', txt)  #.encode('utf-8', 'ignore')
+                txt = unicodedata.normalize('NFKC', txt).encode('utf-8', 'ignore')
                 print(txt)
                 if include_urls:
                     p = node.parentNode

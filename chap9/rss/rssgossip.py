@@ -53,6 +53,7 @@ for o, a in opts:
 
 searcher = re.compile(args[0].decode('utf-8'), re.IGNORECASE)
 for url in string.split(os.environ['RSS_FEED']):
+    print("url: %s" % url)
     feed = urllib.urlopen(url)
     try:
         dom = minidom.parse(feed)
