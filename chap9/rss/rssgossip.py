@@ -27,46 +27,42 @@ import getopt
 from xml.dom import minidom
 
 def usage():
-    print("Usage:\npython rssgossip.py [-uh] <search-regexp>")
+    print("Usage:\npython rssgossip.py [-uph] <search-regexp>")
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "uh", ["urls", "help"])
+    opts, args = getopt.getopt(sys.argv[1:], "uph", ["urls", "prlist","help"])
 except getopt.GetoptError, err:
     print str(err)
     usage()
     sys.exit(2)
 
 include_urls = False
+prlist = False
 for o, a in opts:
     if o == "-u":
         include_urls = True
+    if o == "-p":
+        prlist = True
     elif o in ("-h", "--help"):
         usage()
         sys.exit()
     else:
         assert False, "unhandled option"
 
-print(args[0])
+# print(args[0])
 
 searcher = re.compile(args[0].decode('utf-8'), re.IGNORECASE)
 for url in string.split(os.environ['RSS_FEED']):
     feed = urllib.urlopen(url)
-    print("feed:")
-    print(feed)
     try:
         dom = minidom.parse(feed)
-        print("dom:")
-        print(dom)
         forecasts = []
         for node in dom.getElementsByTagName('title'):
-            print("node:")
-            print(node)
             txt = node.firstChild.wholeText
-            prtxt = txt.encode('utf-8', 'ignore')
-            print("prtxt:")
-            print(prtxt)
+            if prlist:
+                prtxt = txt.encode('utf-8', 'ignore')
+                print("> %s" % prtxt)
             if searcher.search(txt):
-                print("Hit!")
                 txt = unicodedata.normalize('NFKC', txt).encode('utf-8', 'ignore')
                 print(txt)
                 if include_urls:
