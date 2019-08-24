@@ -48,7 +48,7 @@ for o, a in opts:
 
 print(args[0])
 
-searcher = re.compile(args[0], re.IGNORECASE)
+searcher = re.compile(args[0].decode('utf-8'), re.IGNORECASE)
 for url in string.split(os.environ['RSS_FEED']):
     feed = urllib.urlopen(url)
     print("feed:")
@@ -62,8 +62,9 @@ for url in string.split(os.environ['RSS_FEED']):
             print("node:")
             print(node)
             txt = node.firstChild.wholeText
-            print("txt:")
-            print(txt)
+            prtxt = txt.encode('utf-8', 'ignore')
+            print("prtxt:")
+            print(prtxt)
             if searcher.search(txt):
                 print("Hit!")
                 txt = unicodedata.normalize('NFKC', txt).encode('utf-8', 'ignore')

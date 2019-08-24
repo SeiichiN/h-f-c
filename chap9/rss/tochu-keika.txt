@@ -1,0 +1,115 @@
+うまくいってないので、途中経過を残しておく。
+
+''rssgossip.py''
+<<<
+import urllib
+import os
+import re
+import sys
+import string
+import unicodedata
+import getopt
+from xml.dom import minidom
+
+def usage():
+    print("Usage:\npython rssgossip.py [-uh] <search-regexp>")
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "uh", ["urls", "help"])
+except getopt.GetoptError, err:
+    print str(err)
+    usage()
+    sys.exit(2)
+
+include_urls = False
+for o, a in opts:
+    if o == "-u":
+        include_urls = True
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+
+print(args[0])
+
+searcher = re.compile(args[0], re.IGNORECASE)
+for url in string.split(os.environ['RSS_FEED']):
+    feed = urllib.urlopen(url)
+    print("feed:")
+    print(feed)
+    try:
+        dom = minidom.parse(feed)
+        print("dom:")
+        print(dom)
+        forecasts = []
+        for node in dom.getElementsByTagName('title'):
+            print("node:")
+            print(node)
+            txt = node.firstChild.wholeText
+            print("txt:")
+            print(txt)
+            if searcher.search(txt):
+                print("Hit!")
+                txt = unicodedata.normalize('NFKC', txt).encode('utf-8', 'ignore')
+                print(txt)
+                if include_urls:
+                    p = node.parentNode
+                    link = p.getElementsByTagName('link')[0].firstChild.wholeText
+                    print("\t%s" % link)
+    except:
+        sys.exit(1)
+>>>
+
+
+''mynewshound.c''
+<<<
+/*
+ * mynewshound.c
+ * p417
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+
+int main(int argc, char *argv[])
+{
+    char *feeds[] = {
+        "https://news.yahoo.co.jp/pickup/rss.xml",
+        "http://rss.cnn.com/rss/edition_world.rss",
+        "http://www.billies-works.com/feed/"
+    };
+
+    int times = 3;
+    char *phrase = argv[1];
+    int i;
+    const char *PYTHON = "/usr/bin/python";
+    const char *SCRIPT = "rssgossip.py";
+
+    printf("phrase: %s\n", phrase);
+
+    for (i = 0; i < times; i++) {
+        char var[255];
+        sprintf(var, "RSS_FEED=%s", feeds[i]);
+        printf("%s\n", var);
+        char *vars[] = {var, NULL};
+        if ( execle (PYTHON, PYTHON, SCRIPT, phrase, NULL, vars ) == -1) {
+            fprintf(stderr, "スクリプトを実行できません：%s\n", strerror(errno));
+            return 1;
+        }
+    }
+    return 0;
+}
+>>>
+
+''mynewshound.c'' で、''int times = 3;'' としているが、''execle'' では、プロセスを置き換えることに
+なるから、''for (i=0; i<times; i++)'' となっていても、実際は ''i=0'' のときしか実行されない。
+
+で、実行結果がこれ。
+
+<<<
+$ /usr/bin/python rssgossip.py '香港'
+
+

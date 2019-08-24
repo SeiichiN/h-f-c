@@ -1,5 +1,5 @@
 /*
- * newshound.c
+ * mynewshound.c
  * p417
  */
 
@@ -10,9 +10,12 @@
 
 int main(int argc, char *argv[])
 {
-    char *feeds[] = {"https://news.yahoo.co.jp/pickup/rss.xml",
-                    "http://feeds.cnn.co.jp/rss/cnn/cnn.rdf",
-                     "http://www.billies-works.com/feed/"};
+    char *feeds[] = {
+        "https://news.yahoo.co.jp/pickup/rss.xml",
+        "http://rss.cnn.com/rss/edition_world.rss",
+        "http://www.billies-works.com/feed/"
+    };
+
     int times = 3;
     char *phrase = argv[1];
     int i;

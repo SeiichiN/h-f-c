@@ -61,9 +61,9 @@ print(args[0])
 searcher = re.compile(args[0], re.IGNORECASE)
 for url in str.split(os.environ['RSS_FEED']):
     urldata = urllib.request.urlopen(url)
-    feed = urldata.read().decode('utf-8').encode('utf-8')
-    print("feed:")
-    print(feed)
+    feed = urldata.read()  #  .decode('utf-8').encode('utf-8')
+    # print("feed:")
+    # print(feed)
     try:
         dom = minidom.parseString(feed)
         print("domdom:")
