@@ -1,16 +1,17 @@
 CC=cc
 CFLAGS=-g -Wall
-SRC=newshound2.c
-OBJ=newshound2.o
+SRC=news_opener.c
+OBJ=news_opener.o
+TARGET=news_opener
 
-all: newshound2
+all: $(TARGET)
 
 newshound: $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o newshound2
+	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
 
 newshound.o: newshound2.c
-	$(CC) $(CFLAGS) -c newshound2.c -o newshound2.o
+	$(CC) $(CFLAGS) -c $(SRC) -o $(OBJ)
 
 clear:
-	rm -rf newshound2 $(OBJ)
+	rm -rf $(TARGET) $(OBJ)
  

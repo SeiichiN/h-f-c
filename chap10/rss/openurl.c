@@ -16,28 +16,26 @@ void error(char *msg)
 
 void open_url(char *url)
 {
-    char launch[255];
     /*
+    char launch[255];
+
     sprintf(launch, "cmd /c start %s", url);
     system(launch);
-    */
-    /*
+
     sprintf(launch, "x-www-browser '%s' &", url);
     system(launch);
-    */
-    /*
+
     sprintf(launch, "open '%s'", url);
     system(launch);
     */
 
-    sprintf(launch, "'%s' &", url);
-    printf("%s\n", launch);
-
+    const char *BROWSER = "/usr/bin/x-www-browser";
+    
     pid_t pid = fork();
     if (pid == -1)
         error("プロセスをフォークできません");
     if (!pid) {
-        if (execl("/usr/bin/x-www-browser", launch,  NULL) == -1) {
+        if (execl(BROWSER, BROWSER, url,  NULL) == -1) {
             fprintf(stderr, "スクリプトを実行できません: %s\n", strerror(errno));
         }
     }
