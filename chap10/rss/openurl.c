@@ -16,7 +16,6 @@ void error(char *msg)
 
 void open_url(char *url)
 {
-    /*
     char launch[255];
 
     sprintf(launch, "cmd /c start %s", url);
@@ -27,8 +26,8 @@ void open_url(char *url)
 
     sprintf(launch, "open '%s'", url);
     system(launch);
-    */
 
+  /*
     const char *BROWSER = "/usr/bin/x-www-browser";
     
     pid_t pid = fork();
@@ -39,6 +38,7 @@ void open_url(char *url)
             fprintf(stderr, "スクリプトを実行できません: %s\n", strerror(errno));
         }
     }
+	*/
 }
 
 int main()
