@@ -29,13 +29,16 @@ void open_url(char *url)
     system(launch);
     */
 
-    const char *READER = "/usr/bin/curl";
+    const char *READER = "/usr/bin/wget";
+
+	char link[255];
+	sprintf(link, "%s", url);
     
     pid_t pid = fork();
     if (pid == -1)
         error("プロセスをフォークできません");
     if (!pid) {
-        if (execl(READER, READER, url, "-o", "list.html", NULL) == -1) {
+        if (execl(READER, READER, "-O", "list.html", link, NULL) == -1) {
             fprintf(stderr, "スクリプトを実行できません: %s\n", strerror(errno));
         }
     }
@@ -71,8 +74,10 @@ int main(int argc, char *argv[])
     /* これにより、パイプからの内容が標準入力に書き込まれる。 */
     char line[255];
     while (fgets(line, 255, stdin) != NULL) {
-        if (line[0] == '\t')
-            open_url(line + 1);
+        if (line[0] == '\t'){
+		  printf("line: %s\n", line + 1);
+		  open_url(line + 1);
+		}
     }
     return 0;
 }
