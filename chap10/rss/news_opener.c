@@ -14,6 +14,24 @@ void error(char *msg)
     exit(1);
 }
 
+void rec_url(char *url)
+{
+    FILE *f = fopen("stories.txt", "w");
+    if (!f) {
+        error("stories.txtを開けません");
+    }
+    
+    pid_t pid = fork();
+    if (pid == -1)
+        error("プロセスをフォークできません");
+    if (!pid) {
+        if (dup2(fileno(f), 1) == -1) {
+            error("標準出力をリダイレクトできません");
+        }
+        fprintf(stdout, "%s\n", url);
+    }
+}
+
 void open_url(char *url)
 {
     /*
@@ -29,8 +47,8 @@ void open_url(char *url)
     system(launch);
     */
 
-    const char *BROWSER = "/usr/bin/x-www-browser";
-    
+    const char *BROWSER = "/usr/bin/firefox";
+
     pid_t pid = fork();
     if (pid == -1)
         error("プロセスをフォークできません");
@@ -68,10 +86,12 @@ int main(int argc, char *argv[])
     close(fd[1]);  /* パイプの書き込み側を閉じる。 */
     dup2(fd[0], 0);  /* パイプの読み込み側を標準入力にコピー。 */
     /* これにより、パイプからの内容が標準入力に書き込まれる。 */
-    char line[255];
-    while (fgets(line, 255, stdin) != NULL) {
-        if (line[0] == '\t')
+    char line[510];
+    while (fgets(line, 510, stdin) != NULL) {
+        if (line[0] == '\t') {
             open_url(line + 1);
+            /* rec_url(line + 1); */
+        }
     }
     return 0;
 }
