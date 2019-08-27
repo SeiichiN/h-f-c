@@ -31,14 +31,14 @@ void open_url(char *url)
 
     const char *READER = "/usr/bin/wget";
 
-	char link[255];
+	char link[510];
 	sprintf(link, "%s", url);
     
     pid_t pid = fork();
     if (pid == -1)
         error("プロセスをフォークできません");
     if (!pid) {
-        if (execl(READER, READER, "-O", "list.html", link, NULL) == -1) {
+        if (execl(READER, READER,  url, NULL) == -1) {
             fprintf(stderr, "スクリプトを実行できません: %s\n", strerror(errno));
         }
     }
@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
     close(fd[1]);  /* パイプの書き込み側を閉じる。 */
     dup2(fd[0], 0);  /* パイプの読み込み側を標準入力にコピー。 */
     /* これにより、パイプからの内容が標準入力に書き込まれる。 */
-    char line[255];
-    while (fgets(line, 255, stdin) != NULL) {
+    char line[510];
+    while (fgets(line, 510, stdin) != NULL) {
         if (line[0] == '\t'){
 		  printf("line: %s\n", line + 1);
 		  open_url(line + 1);
