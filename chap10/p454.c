@@ -20,6 +20,20 @@ void diediedie(int sig)
  *          (*handler)(int) -- 割り込み時に処理させたい関数
  *             handler -- 関数のアドレス
  *             int -- その関数の引数。シグナル番号を指定。
+ *
+ *       man より
+ *       sigaction 構造体は以下のような感じに定義される。
+ *
+ *           struct sigaction {
+ *               void     (*sa_handler)(int);
+ *               void     (*sa_sigaction)(int, siginfo_t *, void *);
+ *               sigset_t   sa_mask;
+ *               int        sa_flags;
+ *               void     (*sa_restorer)(void);
+ *           };
+ *
+ *      sigaction() 関数は成功すると 0 を返す。 エラーの場合、-1 を返し、 errno にエラーを示す値をセットする。
+ *
  */
 int catch_signal(int sig, void (*handler)(int))
 {
@@ -32,10 +46,10 @@ int catch_signal(int sig, void (*handler)(int))
 
 int main()
 {
-    if (catch_signal(SIGINT, diediedie) == -1) {
-        fprintf(stderr, "ハンドラを設定できません");
-        exit(2);
-    }
+  if (catch_signal(SIGINT, diediedie) == -1) {
+	fprintf(stderr, "ハンドラを設定できません");
+	exit(2);
+  }
   char name[30];
   printf("名前を入力してください：");
   fgets(name, 30, stdin);

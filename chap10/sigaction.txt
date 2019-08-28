@@ -1,0 +1,381 @@
+SIGACTION(2)                                                         Linux Programmer's Manual                                                         SIGACTION(2)
+
+名
+       sigaction - シグナルの動作の確認と変更
+
+書
+       #include <signal.h>
+
+       int sigaction(int signum, const struct sigaction *act,
+                     struct sigaction *oldact);
+
+   glibc 向けの機能検査マクロの要件 (feature_test_macros(7)  参照):
+
+       sigaction(): _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
+
+       siginfo_t: _POSIX_C_SOURCE >= 199309L
+
+説
+       sigaction()  システムコールは、特定のシグナルを受信した際の プロセスの動作を変更するのに使用される (シグナルの概要については signal(7)  を参照)。
+
+       signum には、 SIGKILL と SIGSTOP 以外の有効なシグナルをどれでも指定できる。
+
+       act が NULL 以外であれば、シグナル signum の新しい動作 (action) として act が設定される。 oldact が NULL でなければ、今までの動作が oldact に格納される。
+
+       sigaction 構造体は以下のような感じに定義される。
+
+           struct sigaction {
+               void     (*sa_handler)(int);
+               void     (*sa_sigaction)(int, siginfo_t *, void *);
+               sigset_t   sa_mask;
+               int        sa_flags;
+               void     (*sa_restorer)(void);
+           };
+
+       アーキテクチャーによっては共用体 (union) が用いられており、その場合には sa_handler と sa_sigaction の両方を同時に割り当てることはできない。
+
+       sa_restorer  はアプリケーションが使用することを意図したフィールドではない (POSIX は sa_restorer フィールドを規定していない)。 このフィールドの詳細な目的につ
+       いては sigreturn(2) に書かれている。
+
+       sa_handler は signum に対応する動作を指定するもので、 デフォルトの動作を行う SIG_DFL、 そのシグナルを無視する SIG_IGN、 シグナルハンドラー関数へのポインター
+       が設定できる。 シグナルハンドラー関数の引き数は一つであり、シグナル番号が引き数として 渡される。
+
+       sa_flags  に  SA_SIGINFO  が指定された場合、  (sa_handler  ではなく) sa_sigaction により signum に対応するシグナルハンドラー関数が指定される。指定される関数
+       は、最初の引き数としてシグナル番号を、二番目の引き数として siginfo_t へのポインターを、三番目の引き数として (void *  にキャストした)  ucontext_t  へのポイン
+       ターを受けとる。 (一般的には、ハンドラー関数の三番目の引き数が使用されない。ucontext_t についての詳しい情報は getcontext(3) を参照。)
+
+       sa_mask  は、シグナルハンドラー実行中に禁止  (block)  すべきシグナルのマスクを指定する (ハンドラー実行中のシグナルの禁止は、シグナルハンドラーが起動されたス
+       レッド のシグナルのマスクに追加することで行われる)。  さらに、  SA_NODEFER  フラグが指定されていない場合は、ハンドラーを起動するきっかけとなる  シグナルにも
+       sa_mask が適用される。
+
+       sa_flags はシグナルハンドラーの動作を変更するためのフラグの集合を指定する。 sa_flags には、以下に示すフラグの (0 個以上の) 論理和をとったものを指定する。
+
+           SA_NOCLDSTOP
+                  signum が SIGCHLD の場合、 子プロセスが停止したり (子プロセスが SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU を受けたとき) 再開したり (子プロセスが SIGCONT
+                  を受けたとき) したときに SIGCHLD の通知を受けない。 このフラグは、 SIGCHLD に対してハンドラーを設定する際にのみ意味を持つ。
+
+           SA_NOCLDWAIT (Linux 2.6 以降)
+                  (Linux 2.6 以降)  signum が SIGCHLD の場合、子プロセスが終了したときに 子プロセスをゾンビプロセスに変化させない (waitpid(2)  も参照)。 このフラグ
+                  は、 SIGCHLD に対してハンドラーを設定する際、もしくはそのシグナルの処理方法を SIG_DFL に設定する際にのみ意味を持つ。
+
+                  SIGCHLD  に対してハンドラーを設定する際に SA_NOCLDWAIT フラグをセットした場合、 子プロセスが終了した際に SIGCHLD シグナルが生成されるかどうかは、
+                  POSIX.1 では規定されていない。 Linux では、この状況で SIGCHLD シグナルは生成される。 いくつかの他の実装では生成されない。
+
+           SA_NODEFER
+                  それ自身のシグナルハンドラーの内部にいる時でも  そのシグナルをマスクしないようにする。   このフラグはシグナルハンドラーを設定する際にのみ意味を持
+                  つ。 SA_NOMASK はこのフラグと同じ意味だが、廃止されており、非標準である。
+
+           SA_ONSTACK
+                  sigaltstack(2)  で提供される別のシグナルスタックでシグナルハンドラーを呼び出す。 別のシグナルスタックが利用可能でなければ、デフォルトのスタックが
+                  使用される。 このフラグはシグナルハンドラーを設定する際にのみ意味を持つ。
+
+           SA_RESETHAND
+                  シグナルハンドラーを設定する際に、シグナルの動作をデフォルトに戻す。 このフラグはシグナルハンドラーを設定する際にのみ意味を持つ。 SA_ONESHOT はこ
+                  のフラグと同じ意味だが、廃止されており、非標準である。
+
+           SA_RESTART
+                  いくつかのシステムコールをシグナルの通知の前後で再開できるようにして、 BSD シグナル方式 (semantics) と互換性のある動作を提供する。 このフラグはシ
+                  グナルハンドラーを設定する際にのみ意味を持つ。 signal(7)  に書かれているシステムコールの再開に関する議論を参照のこと。
+
+           SA_RESTORER
+                  アプリケーションでの使用を意図したものではない。 このフラグは C ライブラリが sa_restorer フィールドに "signal trampoline"  のアドレスが入っている
+                  ことを示すために使用される。 詳細は sigreturn(2) を参照。
+
+           SA_SIGINFO (Linux 2.2 以降)
+                  シグナルハンドラーは一つではなく、三つの引き数を持つ。この場合は sa_handler のかわりに sa_sigaction を設定しなければならない このフラグはシグナル
+                  ハンドラーを設定する際にのみ意味を持つ。
+
+       sa_sigaction のパラメーター siginfo_t は以下のフィールドを持つ構造体である:
+
+           siginfo_t {
+               int      si_signo;     /* Signal number */
+               int      si_errno;     /* An errno value */
+               int      si_code;      /* Signal code */
+               int      si_trapno;    /* Trap number that caused
+                                         hardware-generated signal
+                                         (unused on most architectures) */
+               pid_t    si_pid;       /* Sending process ID */
+               uid_t    si_uid;       /* Real user ID of sending process */
+               int      si_status;    /* Exit value or signal */
+               clock_t  si_utime;     /* User time consumed */
+               clock_t  si_stime;     /* System time consumed */
+               sigval_t si_value;     /* Signal value */
+               int      si_int;       /* POSIX.1b signal */
+               void    *si_ptr;       /* POSIX.1b signal */
+               int      si_overrun;   /* Timer overrun count;
+                                         POSIX.1b timers */
+               int      si_timerid;   /* Timer ID; POSIX.1b timers */
+               void    *si_addr;      /* Memory location which caused fault */
+               long     si_band;      /* Band event (was int in
+                                         glibc 2.3.2 and earlier) */
+               int      si_fd;        /* File descriptor */
+               short    si_addr_lsb;  /* Least significant bit of address
+                                         (since Linux 2.6.32) */
+               void    *si_call_addr; /* Address of system call instruction
+                                         (since Linux 3.5) */
+               int      si_syscall;   /* Number of attempted system call
+                                         (since Linux 3.5) */
+               unsigned int si_arch;  /* Architecture of attempted system call
+                                         (since Linux 3.5) */
+           }
+
+       si_signo, si_errno, si_code は全てのシグナルに対して定義されている (si_errno は Linux では一般的には使用されない)。 構造体の残りの部分は、共用体 (union)  に
+       なっているかもしれない。 その場合は該当するシグナルにおいて意味のあるフィールドのみを読み込む ことができる。
+
+       * kill(2)  や sigqueue(3) で送信されたシグナルでは si_pid と si_uid が設定される。 さらに、 sigqueue(3) で送信されたシグナルでは si_int と si_pid にシグナル
+         の送信者により指定された値が設定される。詳細は sigqueue(3) を参照。
+
+       * POSIX.1b タイマー (Linux 2.6 以降) は si_overrun と si_timerid を設定する。 si_timerid  フィールドはカーネルがタイマーを特定するのに使用する内部  ID  であ
+         り、  timer_create(2) が返すタイマー ID と同じではない。 si_overrun フィールドはタイマーが回り切った回数である。 これは timer_getoverrun(2) の呼び出しで取
+         得できる情報と同じである。 これらのフィールドは非標準で Linux による拡張である。
+
+       * メッセージキューの通知用に送信されたシグナル (mq_notify(3) の SIGEV_SIGNAL の説明を参照) では、 si_int/si_ptr に mq_notify(3) に渡された sigev_value  が設
+         定される。 si_pid にはメッセージ送信者のプロセス ID が設定され、 si_uid にはメッセージ送信者の実ユーザー ID が設定される。
+
+       * SIGCHLD  は  si_pid,  si_uid,  si_status,  si_utime, si_stime を設定し、子プロセスに関する情報を提供する。 si_pid フィールドは子プロセスのプロセス ID で、
+         si_uid フィールドは子プロセスの実ユーザー ID である。 si_stime フィールドには、 (si_code が CLD_EXITED の場合は)  子プロセスの終了ステータスが、それ以外の
+         場合は状態が変化する原因となったシグナル番号が格納される。 si_utime と si_stime には子プロセスが使用したユーザー CPU 時間とシステム CPU 時間がそれぞれ格納
+         される。(getrusage(2) や times(2) と異なり) これらのフィールドには wait 待ちの子プロセスにより使用された時間は含まれない。 2.6 より前と 2.6.27  以降のカー
+         ネルでは、 これらのフィールドに格納される CPU 時間の単位は sysconf(_SC_CLK_TCK) である。 2.6.27 より前の 2.6 系のカーネルでは、バグがあり、 これらのフィー
+         ルドの CPU 時間の単位が (カーネルのコンフィグで指定される) システムの jiffy であった (time(7) 参照)。
+
+       * SIGILL, SIGFPE, SIGSEGV, SIGBUS, SIGTRAP では、 si_addr  に  fault  が発生したアドレスが設定される。  いくつかのアーキテクチャーでは、  これらのシグナルは
+         si_trapno フィールドにも設定される。 SIGBUS が発生するエラーのいくつか、特に BUS_MCEERR_AO と BUS_MCEERR_AR では、 si_addr_lsb も設定される。 このフィール
+         ドは報告されるアドレスの最下位ビットを示し、  これによりメモリー破壊の程度を知ることができる。  例えば、ページ全体が壊れている場合には  si_addr_lsb   には
+         log2(sysconf(_SC_PAGESIZE)) が入る。 SIGTRAP が ptrace(2) イベント (PTRACE_EVENT_foo) に対応して配送される際、 si_addr は設定されないが、 si_pid と si_uid
+         にはトラップの配送に責任を負うプロセス ID とユーザー  ID  がそれぞれ格納される。  seccomp(2)  の場合、  トレース対象はイベントを配送した元として示される。
+         BUS_MCEERR_* と si_addr_lsb は Linux 固有の拡張である。
+
+       * SIGIO/SIGPOLL  (2 つの名前は Linux では同義語) では si_band と si_fd が設定される。 si_band イベントは、 poll(2) が revents フィールドに設定するのと同じ値
+         が入ったビットマスクである。 si_fd フィールドは I/O イベントが発生したファイルディスクリプターを示す。
+
+       * seccomp フィルターが SECCOMP_RET_TRAP を返す際に (Linux 3.5 以降で)  生成される  SIGSYS  シグナルでは、  si_call_addr,  si_syscall,  si_arch,  si_arch  や
+         seccomp(2) で説明されている他のフィールドが設定される。
+
+       si_code は、そのシグナルが送信された理由を示す値である (ビットマスクではない)。 ptrace(2) イベントでは、 si_code には SIGTRAP が入り、 上位バイトには ptrace
+       イベントが入る。
+
+           (SIGTRAP | PTRACE_EVENT_foo << 8).
+
+       通常のシグナルの場合には、 以下のリストに示す値がどのシグナルの場合でも si_code に入りうる。シグナルが生成された理由も記載している。
+
+           SI_USER
+                  kill(2)
+
+           SI_KERNEL
+                  カーネルにより送信された
+
+           SI_QUEUE
+                  sigqueue(3)
+
+           SI_TIMER
+                  POSIX タイマーが満了した
+
+           SI_MESGQ (Linux 2.6.6 以降)
+                  POSIX メッセージキューの状態が変化した; mq_notify(3) 参照
+
+           SI_ASYNCIO
+                  非同期 IO (AIO) が完了した
+
+           SI_SIGIO
+                  SIGIO がキューイングされた (Linux 2.2 以下のカーネルのみ; Linux 2.4 以降では以下で説明する SIGIO/SIGPOLL の si_code が入る)
+
+           SI_TKILL (Linux 2.4.19 以降)
+                  tkill(2) または tgkill(2)
+
+       SIGILL シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           ILL_ILLOPC
+                  不正な命令コード
+
+           ILL_ILLOPN
+                  不正なオペランド
+
+           ILL_ILLADR
+                  不正なアドレッシングモード
+
+           ILL_ILLTRP
+                  不正なトラップ
+
+           ILL_PRVOPC
+                  特権が必要な命令コード
+
+           ILL_PRVREG
+                  特権が必要なレジスター
+
+           ILL_COPROC
+                  コプロセッサのエラー
+
+           ILL_BADSTK
+                  内部スタックエラー
+
+       SIGFPE シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           FPE_INTDIV
+                  整数の 0 による除算
+
+           FPE_INTOVF
+                  整数のオーバーフロー
+
+           FPE_FLTDIV
+                  浮動小数点の 0 による除算
+
+           FPE_FLTOVF
+                  浮動小数点のオーバーフロー
+
+           FPE_FLTUND
+                  浮動小数点のアンダーフロー
+
+           FPE_FLTRES
+                  浮動小数点の不正確な演算結果 (inexact result)
+
+           FPE_FLTINV
+                  浮動小数点の不正な操作
+
+           FPE_FLTSUB
+                  範囲外の添字 (subscript)
+
+       SIGSEGV シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           SEGV_MAPERR
+                  オブジェクトにマッピングされていないアドレス
+
+           SEGV_ACCERR
+                  マッピングされたオブジェクトに対するアクセス許可がない
+
+       SIGBUS シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           BUS_ADRALN
+                  不正なアドレスアライメント (alignment)
+
+           BUS_ADRERR
+                  存在しない物理アドレス
+
+           BUS_OBJERR
+                  オブジェクト固有のハードウェアエラー
+
+           BUS_MCEERR_AR (Linux 2.6.32 以降)
+                  マシンチェックで使用中のハードウェアメモリーのエラーが検出された。対応が必須。
+
+           BUS_MCEERR_AO (Linux 2.6.32  以降)
+                  実行中にハードウェアメモリーエラーが検出されたが、使用中のメモリーではない。対応は必須ではない。
+
+       SIGTRAP シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           TRAP_BRKPT
+                  プロセスのブレークポイント
+
+           TRAP_TRACE
+                  プロセスのトレーストラップ
+
+           TRAP_BRANCH (Linux 2.4 以降)
+                  プロセスのブランチトラップ
+
+           TRAP_HWBKPT (Linux 2.4 以降)
+                  ハードウェアのブレークポイント/ウォッチポイント
+
+       SIGCHLD シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           CLD_EXITED
+                  子プロセスが終了した (exited)
+
+           CLD_KILLED
+                  子プロセスが kill された
+
+           CLD_DUMPED
+                  子プロセスが異常終了した
+
+           CLD_TRAPPED
+                  トレース対象の子プロセスがトラップを上げた
+
+           CLD_STOPPED
+                  子プロセスが停止 (stop) した
+
+           CLD_CONTINUED (Linux 2.6.9 以降)
+                  停止していた子プロセスが再開した
+
+       SIGIO/SIGPOLL シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           POLL_IN
+                  入力データが利用可能
+
+           POLL_OUT
+                  出力バッファーが利用可能
+
+           POLL_MSG
+                  入力メッセージが利用可能
+
+           POLL_ERR
+                  I/O エラー
+
+           POLL_PRI
+                  高優先の入力が利用可能
+
+           POLL_HUP
+                  デバイスが接続されていない
+
+       SIGSYS シグナルの場合、 si_code には以下の値が入る可能性がある:
+
+           SYS_SECCOMP (Linux 3.5 以降)
+                  seccomp(2) のフィルタールールによる配送された
+
+返
+       sigaction() 関数は成功すると 0 を返す。 エラーの場合、-1 を返し、 errno にエラーを示す値をセットする。
+
+エ
+       EFAULT act か oldact が指しているメモリーが正しいプロセスのアドレス空間にない。
+
+       EINVAL 無効なシグナルが指定された。補足 (catch) したり無視したりできない シグナルである SIGKILL や SIGSTOP に対する動作を変更しようとした場合にも発生する。
+
+準
+       POSIX.1-2001, SVr4.
+
+注
+       fork(2) 経由で作成された子プロセスは、親プロセスのシグナルの処理方法の コピーを継承する。 execve(2) の前後で、ハンドラーが設定されているシグナルの処理方法は
+       デフォルトにリセットされ、 無視が設定されているシグナルの処理方法は変更されずそのままとなる。
+
+       POSIX  では、 kill(2)  や raise(3)  で生成できないシグナル SIGFPE, SIGILL, SIGSEGV を無視 (ignore) した場合、その後の動作は未定義である。 ゼロによる整数割り
+       算の結果は未定義となる。 アーキテクチャーによっては、このとき SIGFPE シグナルが生成される。 (同様に負の最大整数を -1 で割ると SIGFPE  が生成されるかもしれな
+       い)  このシグナルを無視すると無限ループに陥るかもしれない。
+
+       POSIX.1-1990 では SIGCHLD に SIG_IGN を設定することを認めていない。 POSIX.1-2001 では認められており、 SIGCHLD を無視することでゾンビプロセスの生成を防止する
+       ことができる (wait(2)  を参照)。 さらに、BSD と System V では SIGCHLD を無視した際の動作が異なっている。  そのため、完全に移植性がある方法で、終了した子プロ
+       セスがゾンビにならないこと を保証するには、 SIGCHLD シグナルを補足し、 wait(2)  などを実行するしかない。
+
+       POSIX.1-1990  の仕様では SA_NOCLDSTOP のみが定義されている。 POSIX.1-2001 では SA_NOCLDWAIT, SA_RESETHAND, SA_NODEFER, SA_SIGINFO が追加された。 UNIX の古い
+       実装で動かすアプリケーションで、 他の sa_flags フラグを使用すると移植性が下がる。
+
+       SA_RESETHAND フラグは SVr4 の同じ名前のフラグと互換性がある。
+
+       SA_NODEFER フラグは 1.3.9 以降のカーネルでは同じ名前の SVr4 のフラグと互換性がある。 ぞれ以前の  Linux  カーネルの実装では、このフラグを設定しているシグナル
+       だけでなく、どのシグナルでも受けることを許していた (実際には sa_mask の設定により無効にできる)。
+
+       sigaction()  の二番目の引き数に NULL を指定して呼び出すと、現在のシグナルハンドラーを確認する ことができる。また、二番目と三番目の引き数を NULL にて呼び出す
+       ことで、 指定されたシグナルが現在のマシンで使えるかどうかチェックできる。
+
+       SIGKILL や SIGSTOP を (sa_mask に指定して) 禁止することはできない。 禁止しようとしても黙って無視される。
+
+       シグナル集合の操作に関する詳細は sigsetops(3)  を参照のこと。
+
+       シグナルハンドラー内から安全に呼び出すことができる、 async-signal-safe functions (非同期シグナルで安全な関数) の リストについては signal(7)  を参照。
+
+   非
+       SA_SIGINFO が導入される前は、 struct sigcontext 型の二番目の引き数と一緒に sa_handler を使用することで、 いくつかの追加の情報を入手することができた。 詳細に
+       ついては Linux カーネルソースの関連部分を見てほしい。 現在はこの使用法は廃止されている。
+
+バ
+       2.6.13  以前のカーネルでは、 sa_flags に SA_NODEFER を指定した場合、 ハンドラーが実行中に配送されたシグナル自身がマスクされなくなるだけでなく、 sa_mask に指
+       定されたシグナルもマスクされなくなる。 このバグは、カーネル 2.6.14 で修正された。
+
+例
+       mprotect(2)  参照。
+
+関
+       kill(1), kill(2), killpg(2), pause(2), restart_syscall(2), seccomp(2)  sigaltstack(2), signal(2), signalfd(2), sigpending(2), sigreturn(2),  sigprocmask(2),
+       sigsuspend(2), wait(2), raise(3), siginterrupt(3), sigqueue(3), sigsetops(3), sigvec(3), core(5), signal(7)
+
+こ
+       この man ページは Linux man-pages プロジェクトのリリース 3.79 の一部である。 プロジェクトの説明とバグ報告に関する情報は http://www.kernel.org/doc/man-pages/
+       に書かれている。
+
+Linux                                                                        2015-01-22                                                                SIGACTION(2)
