@@ -97,9 +97,25 @@ int main(int argc, char *argv[])
         if (connect_d == -1)
             error("第2のソケットを開けません");
     
-        char *msg = advice[rand() % 5];
+        char *msg = res[0];
+		char rec_msg[255];
+		char *send_msg1 = cli[0];
+		char *send_msg2 = cli[1];
 
         say(connect_d, msg);
+		
+		read_in(connect_d, rec_msg, 256);
+		puts(rec_msg);
+		if (rec_msg == "だれですか？") {
+			*msg = *res[1];
+			say(connect_d, msg);
+		} else if (rec_msg == "どのオスカーだい") {
+			*msg = *res[2];
+			say(connect_d, msg);
+		} else {
+			say(connect_d, "期待したことばと違います\r\n");
+		}
+
         close(connect_d);
     }
     
