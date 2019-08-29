@@ -95,14 +95,23 @@ int main(int argc, char *argv[])
 
     int PORT = 30000;
     char *res[] = {
-        "コン！コン！\r\n",
-        "オスカー\r\n",
-        "オスカーシリーな（くだらない）質問をすると、くだらない答えが返ってきます\r\n",
+        "> コン！コン！\r\n",
+        "> オスカー\r\n",
+        "> オスカーシリーな（くだらない）質問をすると、くだらない答えが返ってきます\r\n",
+        "> 期待したことばと違います\r\n"
     };
+
 	char *cli[] = {
-	  "だれですか？\r\n",
-	  "どのオスカーだい\r\n",
+	  "だれですか？\r",
+	  "オスカー？\r",
 	};
+
+    /*
+    char *cli[] = {
+        "who's there?\r",
+        "oscar who?"
+    };
+    */
 
     listener_d = open_listener_socket();
 
@@ -121,23 +130,29 @@ int main(int argc, char *argv[])
         if (connect_d == -1)
             error("第2のソケットを開けません");
     
-        char *msg = res[0];
 		char rec_msg[255];
+        /*
+        char *msg = res[0];
 		char *send_msg1 = cli[0];
 		char *send_msg2 = cli[1];
-
-        say(connect_d, msg);
+        */
+        
+        say(connect_d, res[0]);
 
         while(1) {
-            read_in(connect_d, rec_msg, 256);
-            puts(rec_msg);
-            if (strncasecmp(rec_msg, "だれですか？", 6) == 0) {
+            read_in(connect_d, rec_msg, sizeof(rec_msg));
+
+            printf("client> %s\n", rec_msg);
+            printf("server> %s\n", cli[0]);
+            printf("strcmp: %i\n", strcmp(rec_msg, cli[0]));
+            
+            if (strcmp(rec_msg, cli[0]) == 0) {
                 say(connect_d, res[1]);
-            } else if (strncasecmp(rec_msg, "どのオスカーだい", 8) == 0) {
+            } else if (strcmp(rec_msg, cli[1]) == 0) {
                 say(connect_d, res[2]);
                 break;
             } else {
-                say(connect_d, "期待したことばと違います\r\n");
+                say(connect_d, res[3]);
                 break;
             }
         }
