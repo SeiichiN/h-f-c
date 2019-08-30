@@ -96,14 +96,14 @@ int main(int argc, char *argv[])
     int PORT = 30000;
     char *res[] = {
         "> コン！コン！\r\n",
-        "> オスカー\r\n",
-        "> オスカーシリーな（くだらない）質問をすると、くだらない答えが返ってきます\r\n",
+        "> オスカ\r\n",
+        "> オスカシリーな（くだらない）質問をすると、くだらない答えが返ってきます\r\n",
         "> 期待したことばと違います\r\n"
     };
 
 	char *cli[] = {
 	  "だれですか？\r",
-	  "オスカー？\r",
+	  "オスカ？\r",
 	};
 
     /*
@@ -136,25 +136,32 @@ int main(int argc, char *argv[])
 		char *send_msg1 = cli[0];
 		char *send_msg2 = cli[1];
         */
+		int c = 0;
         
         say(connect_d, res[0]);
 
         while(1) {
+			memset(rec_msg, '\0', sizeof(rec_msg));
             read_in(connect_d, rec_msg, sizeof(rec_msg));
 
+			printf("%i 回目\n", c + 1);
             printf("client> %s\n", rec_msg);
-            printf("server> %s\n", cli[0]);
-            printf("strcmp: %i\n", strcmp(rec_msg, cli[0]));
+            printf("server> %s\n", cli[c]);
+            printf("strcmp: %i\n", strcmp(rec_msg, cli[c]));
             
             if (strcmp(rec_msg, cli[0]) == 0) {
                 say(connect_d, res[1]);
+				c = 1;
             } else if (strcmp(rec_msg, cli[1]) == 0) {
                 say(connect_d, res[2]);
+				c = 2;
                 break;
             } else {
                 say(connect_d, res[3]);
+				c = 0;
                 break;
             }
+
         }
 
         close(connect_d);
