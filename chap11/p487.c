@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
   struct sockaddr_storage client_addr;
   unsigned int address_size = sizeof(client_addr);
-  puts("接続を待っています");
+  puts("ポート30000で、接続を待っています");
   char buf[255];
   
   while(1) {
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 		read_in(connect_d, buf, sizeof(buf));
 
 		if (strncasecmp("Who's there?", buf, 12))
-		  say(connect_d, "「Oscar who?」と入力しなければいけません！\r\n");
+		  say(connect_d, "「Who's there?」と入力しなければいけません！\r\n");
 		else {
 		  if (say(connect_d, "Oscar\r\n> ") != -1) {
 			read_in(connect_d, buf, sizeof(buf));

@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 		  "インターネットノックノックプロトコルサーバ\r\nバージョン1.0\r\nKnock! Knock!\r\n> ") != -1) {
 	  read_in(connect_d, buf, sizeof(buf));
 	  if (strncasecmp("Who's there?", buf, 12))
-		say(connect_d, "「Oscar who?」と入力しなければいけません！\r\n");
+		say(connect_d, "「Who's there?」と入力しなければいけません！\r\n");
 	  else {
 		if (say(connect_d, "Oscar\r\n> ") != -1) {
 		  read_in(connect_d, buf, sizeof(buf));
